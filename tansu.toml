@@ -1,0 +1,11 @@
+VERSION = "2.0.0"
+
+ACCOUNTS = ["GDMTVHLWJTHSUDMZVVMXXH6VJHA2ZV3HNG5LYNAZ6RTWB7GISM6PGTUV"]
+
+[DOCUMENTATION]
+ORG_NAME = "Lightsail Network"
+ORG_URL = "https://lightsail.network/"
+ORG_GITHUB = "lightsail-network"
+
+[[PRINCIPALS]]
+github = "https://github.com/overcat"
