@@ -1,7 +1,7 @@
 import { OpenAPIRoute, Str } from "chanfana";
 import { z } from "zod";
 import { createSorobanDomainsSDK } from "../sorobandomains";
-import { Domain404Error, Record } from "@creit.tech/sorobandomains-sdk";
+import { Domain404Error, Record, ReverseDomain404Error } from "@creit.tech/sorobandomains-sdk";
 
 export class SorobanDomainsQuery extends OpenAPIRoute {
   schema = {
@@ -46,7 +46,7 @@ export class SorobanDomainsQuery extends OpenAPIRoute {
 
     // Retrieve the validated query parameters
     const { q, type } = data.query;
-
+    const sdk = createSorobanDomainsSDK(c);
     if (type === "domain") {
       if (
         !q.endsWith(".xlm") ||
@@ -55,7 +55,6 @@ export class SorobanDomainsQuery extends OpenAPIRoute {
         return this.notFound();
       }
 
-      const sdk = createSorobanDomainsSDK(c);
       try {
         const [domain, subDomain] = q.slice(0, -4).split(".").reverse();
         const domainRecord: Record = await sdk.searchDomain({
@@ -63,7 +62,7 @@ export class SorobanDomainsQuery extends OpenAPIRoute {
           subDomain,
         });
         return Response.json({
-          domain: `${q}`,
+          domain: q,
           address: domainRecord.value.address,
         });
       } catch (e) {
@@ -75,10 +74,18 @@ export class SorobanDomainsQuery extends OpenAPIRoute {
     }
 
     if (type === "address") {
-      return Response.json({
-        domain: "work-in-progress.demo",
-        address: `${q}`,
-      });
+      try {
+        const domain = await sdk.getReverseDomain(q);
+        return Response.json({
+          domain: domain,
+          address: q,
+        });
+      } catch (e) {
+        if (e.name === ReverseDomain404Error.name) {
+          return this.notFound();
+        }
+        throw e;
+      }
     }
   }
 
